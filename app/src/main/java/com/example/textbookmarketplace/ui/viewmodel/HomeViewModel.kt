@@ -28,21 +28,26 @@ class HomeViewModel @Inject constructor(
     val currentUser: StateFlow<AppUser> = userPrefs.currentUser
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), AppUser())
 
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     val textbooks: StateFlow<UiState<List<Textbook>>> = combine(
         _searchQuery, _selectedCategory
     ) { query, category ->
+        Pair(query, category)
+    }.flatMapLatest { (query, category) ->
         when {
             query.isNotBlank() && query.matches(Regex("^\\d{10,13}$")) -> {
-                // ISBN Search
-                val book = repository.getTextbookByIsbn(query)
-                if (book != null) listOf(book) else emptyList()
+                // ISBN Search - getTextbookByIsbn is suspend, so we wrap it in a flow
+                flow {
+                    val book = repository.getTextbookByIsbn(query)
+                    emit(if (book != null) listOf(book) else emptyList())
+                }
             }
             query.isNotBlank() -> repository.searchTextbooks(query)
-            category != "All" -> repository.getTextbooksByCategory(category) // Ensure DAO has this
+            category != "All" -> repository.getTextbooksByCategory(category)
             else -> repository.getAllTextbooks()
         }
-    }.map { UiState.Success(it) }
-        .catch { UiState.Error(it.message ?: "Error") }
+    }.map { UiState.Success(it) as UiState<List<Textbook>> }
+        .catch { emit(UiState.Error(it.message ?: "Error")) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), UiState.Loading)
 
     fun setSearchQuery(query: String) { _searchQuery.value = query }

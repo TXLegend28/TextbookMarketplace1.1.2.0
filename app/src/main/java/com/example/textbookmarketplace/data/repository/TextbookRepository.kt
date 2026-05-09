@@ -16,11 +16,13 @@ class TextbookRepository @Inject constructor(
 ) {
     fun getAllTextbooks(): Flow<List<Textbook>> = localDao.getAllTextbooks()
     fun searchTextbooks(query: String): Flow<List<Textbook>> = localDao.searchTextbooks(query)
+    fun getTextbooksByCategory(category: String): Flow<List<Textbook>> = localDao.getTextbooksByCategory(category)
     fun getMyListings(sellerId: String): Flow<List<Textbook>> =
         if (sellerId.isNotEmpty()) localDao.getMyListings(sellerId) else flowOf(emptyList())
 
     // Add ISBN Query if not in DAO yet
     suspend fun getTextbookByIsbn(isbn: String): Textbook? = localDao.getTextbookByIsbn(isbn)
+    suspend fun getTextbookById(id: String): Textbook? = localDao.getTextbookById(id)
 
     suspend fun addTextbook(textbook: Textbook): UiState<Unit> {
         val existing = localDao.countByIsbn(textbook.isbn)

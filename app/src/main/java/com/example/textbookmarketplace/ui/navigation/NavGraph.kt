@@ -59,7 +59,6 @@ fun NavGraph(
                     navController.navigate(Screen.BookDetail.createRoute(bookId))
                 },
                 onAddBook = { navController.navigate(Screen.AddBook.route) },
-                onWebSearch = { /* handled in screen */ },
                 onMyListings = { navController.navigate(Screen.MyListings.route) },
                 onSettings = { navController.navigate(Screen.Settings.route) }
             )
@@ -82,9 +81,6 @@ fun NavGraph(
             BookDetailScreen(
                 bookId = bookId,
                 onBack = { navController.popBackStack() },
-                onContactSeller = { sellerEmail, bookTitle ->
-                    // Handled in screen via Intent
-                },
                 onReadPdf = { filePath ->
                     navController.navigate(Screen.PdfViewer.createRoute(filePath))
                 },

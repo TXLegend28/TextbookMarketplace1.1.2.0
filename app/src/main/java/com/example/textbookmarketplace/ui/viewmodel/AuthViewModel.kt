@@ -24,6 +24,9 @@ class AuthViewModel @Inject constructor(
     val isLoggedIn: StateFlow<Boolean> = currentUser.map { it.isLoggedIn }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
+    val themeMode: StateFlow<String> = userPrefs.themeMode
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "SYSTEM")
+
     private val _authState = MutableStateFlow<UiState<Unit>>(UiState.Empty)
     val authState: StateFlow<UiState<Unit>> = _authState.asStateFlow()
 
@@ -63,4 +66,10 @@ class AuthViewModel @Inject constructor(
     }
 
     fun resetState() { _authState.value = UiState.Empty }
+
+    fun setFirstLaunchFalse() {
+        viewModelScope.launch {
+            userPrefs.setFirstLaunchFalse()
+        }
+    }
 }
