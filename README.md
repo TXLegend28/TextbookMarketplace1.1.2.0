@@ -1,4 +1,4 @@
-### License
+### Group Work
 
 CSC313 Assignment 2 - Textbook Marketplace
 ```
