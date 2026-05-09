@@ -33,11 +33,15 @@ class NotificationHelper @Inject constructor(
                 description = "Notifications for new listings and messages"
             }
             val notificationManager = context.getSystemService(NotificationManager::class.java)
-            notificationManager.createNotificationChannel(channel)
+            notificationManager?.createNotificationChannel(channel)
         }
     }
 
-    fun showNotification(title: String, message: String, notificationId: Int = System.currentTimeMillis().toInt()) {
+    fun showNotification(
+        title: String,
+        message: String,
+        notificationId: Int = System.currentTimeMillis().toInt()
+    ) {
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setContentTitle(title)
@@ -46,6 +50,6 @@ class NotificationHelper @Inject constructor(
             .setAutoCancel(true)
 
         val notificationManager = context.getSystemService(NotificationManager::class.java)
-        notificationManager.notify(notificationId, builder.build())
+        notificationManager?.notify(notificationId, builder.build())
     }
 }

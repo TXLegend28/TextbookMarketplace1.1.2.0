@@ -9,7 +9,14 @@ interface TextbookDao {
     @Query("SELECT * FROM textbooks WHERE isPendingDelete = 0 ORDER BY dateAdded DESC")
     fun getAllTextbooks(): Flow<List<Textbook>>
 
-    @Query("SELECT * FROM textbooks WHERE isPendingDelete = 0 AND (title LIKE '%' || :query || '%' OR author LIKE '%' || :query || '%' OR sellerName LIKE '%' || :query || '%')")
+    @Query("""
+        SELECT * FROM textbooks 
+        WHERE isPendingDelete = 0 
+        AND (title LIKE '%' || :query || '%' 
+        OR author LIKE '%' || :query || '%' 
+        OR sellerName LIKE '%' || :query || '%'
+        OR isbn LIKE '%' || :query || '%')
+    """)
     fun searchTextbooks(query: String): Flow<List<Textbook>>
 
     @Query("SELECT * FROM textbooks WHERE sellerId = :sellerId AND isPendingDelete = 0 ORDER BY dateAdded DESC")
@@ -20,6 +27,9 @@ interface TextbookDao {
 
     @Query("SELECT * FROM textbooks WHERE isbn = :isbn LIMIT 1")
     suspend fun getTextbookByIsbn(isbn: String): Textbook?
+
+    @Query("SELECT * FROM textbooks WHERE category = :category AND isPendingDelete = 0 ORDER BY dateAdded DESC")
+    fun getTextbooksByCategory(category: String): Flow<List<Textbook>>
 
     @Query("SELECT * FROM textbooks WHERE isSynced = 0 OR isPendingDelete = 1")
     suspend fun getPendingSyncItems(): List<Textbook>
@@ -44,4 +54,7 @@ interface TextbookDao {
 
     @Query("SELECT COUNT(*) FROM textbooks WHERE isbn = :isbn AND isPendingDelete = 0")
     suspend fun countByIsbn(isbn: String): Int
+
+    @Query("UPDATE textbooks SET copies = copies - 1 WHERE id = :id AND copies > 0")
+    suspend fun reduceCopies(id: String): Int
 }

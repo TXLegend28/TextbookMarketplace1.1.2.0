@@ -12,7 +12,12 @@
           "package_name": "com.example.textbookmarketplace"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "237649777713-vfou5i4fqghhp5d7q8ia0q53icotp51n.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyC9x2ix6G70wT3JVViIuhGru9QacCN4hVQ"
@@ -20,7 +25,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "237649777713-vfou5i4fqghhp5d7q8ia0q53icotp51n.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

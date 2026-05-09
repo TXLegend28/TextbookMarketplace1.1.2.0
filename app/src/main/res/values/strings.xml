@@ -18,7 +18,6 @@
     <string name="login_username_hint">Username</string>
     <string name="login_email_hint">Email</string>
     <string name="login_button">Get Started</string>
-    <string name="login_no_password">No password needed. Just your name &amp; email.</string>
 
     <!-- Home -->
     <string name="home_search_hint">Search books, authors, sellers...</string>
@@ -33,7 +32,6 @@
     <string name="add_book_cover">Choose Cover Image</string>
     <string name="add_book_document">Attach PDF or DOCX</string>
     <string name="add_book_document_attached">Document Attached</string>
-    <string name="add_book_field_required">* Required</string>
 
     <!-- Book Detail -->
     <string name="detail_read_pdf">Read PDF</string>

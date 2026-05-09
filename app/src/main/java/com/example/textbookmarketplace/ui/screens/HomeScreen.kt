@@ -5,6 +5,7 @@ import android.net.Uri
 import androidx.compose.animation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -17,7 +18,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.textbookmarketplace.domain.model.UiState
-import com.example.textbookmarketplace.ui.components.*
+import com.example.textbookmarketplace.ui.components.EmptyState
+import com.example.textbookmarketplace.ui.components.TextbookCard
 import com.example.textbookmarketplace.ui.viewmodel.HomeViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -25,18 +27,18 @@ import com.example.textbookmarketplace.ui.viewmodel.HomeViewModel
 fun HomeScreen(
     onBookClick: (String) -> Unit,
     onAddBook: () -> Unit,
-    onWebSearch: () -> Unit,
     onMyListings: () -> Unit,
     onSettings: () -> Unit,
     viewModel: HomeViewModel = hiltViewModel()
 ) {
+    val context = LocalContext.current
     val textbooksState by viewModel.textbooks.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
+    val selectedCategory by viewModel.selectedCategory.collectAsState()
     val isSeller by viewModel.isSeller.collectAsState()
-    val currentUser by viewModel.currentUser.collectAsState()
-    val context = LocalContext.current
-
     var showMenu by remember { mutableStateOf(false) }
+
+    val categories = listOf("All", "Engineering", "Medicine", "Law", "Business", "IT", "Science")
 
     Scaffold(
         topBar = {
@@ -51,7 +53,7 @@ fun HomeScreen(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            "TM Marketplace",
+                            text = "TM Marketplace",
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
@@ -81,14 +83,12 @@ fun HomeScreen(
                             )
                         }
                         DropdownMenuItem(
-                            text = { Text("Web Search") },
+                            text = { Text("Web Search (Google Books)") },
                             onClick = {
                                 showMenu = false
-                                val intent = Intent(
-                                    Intent.ACTION_VIEW,
-                                    Uri.parse("https://books.google.com/books?q=textbooks")
+                                context.startActivity(
+                                    Intent(Intent.ACTION_VIEW, Uri.parse("https://books.google.com/books?q=textbooks"))
                                 )
-                                context.startActivity(intent)
                             },
                             leadingIcon = { Icon(Icons.Default.Public, null) }
                         )
@@ -121,10 +121,11 @@ fun HomeScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
+            // Search Bar
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = viewModel::setSearchQuery,
-                placeholder = { Text("Search books, authors, sellers...") },
+                placeholder = { Text("Search books, authors, ISBN...") },
                 leadingIcon = { Icon(Icons.Default.Search, null) },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -133,12 +134,28 @@ fun HomeScreen(
                 singleLine = true
             )
 
+            // Category Chips
+            LazyRow(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(categories) { category ->
+                    FilterChip(
+                        selected = selectedCategory == category,
+                        onClick = { viewModel.setCategory(category) },
+                        label = { Text(category) }
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Content State
             when (val state = textbooksState) {
                 is UiState.Loading -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         CircularProgressIndicator()
                     }
                 }
@@ -156,20 +173,16 @@ fun HomeScreen(
                         subtitle = "Be the first to list a textbook or check back soon!",
                         action = {
                             TextButton(onClick = {
-                                val intent = Intent(
-                                    Intent.ACTION_VIEW,
-                                    Uri.parse("https://books.google.com/books?q=textbooks")
+                                context.startActivity(
+                                    Intent(Intent.ACTION_VIEW, Uri.parse("https://books.google.com/books?q=textbooks"))
                                 )
-                                context.startActivity(intent)
-                            }) {
-                                Text("Search on Google Books")
-                            }
+                            }) { Text("Search on Google Books") }
                         }
                     )
                 }
                 is UiState.Success -> {
                     val books = state.data
-                    if (books.isEmpty() && searchQuery.isNotEmpty()) {
+                    if (books.isEmpty() && searchQuery.isNotBlank()) {
                         EmptyState(
                             icon = {
                                 Icon(
@@ -182,14 +195,10 @@ fun HomeScreen(
                             subtitle = "No books found for \"$searchQuery\"",
                             action = {
                                 TextButton(onClick = {
-                                    val intent = Intent(
-                                        Intent.ACTION_VIEW,
-                                        Uri.parse("https://books.google.com/books?q=${Uri.encode(searchQuery)}")
+                                    context.startActivity(
+                                        Intent(Intent.ACTION_VIEW, Uri.parse("https://books.google.com/books?q=${Uri.encode(searchQuery)}"))
                                     )
-                                    context.startActivity(intent)
-                                }) {
-                                    Text("Search on Google Books")
-                                }
+                                }) { Text("Search on Google Books") }
                             }
                         )
                     } else if (books.isEmpty()) {
@@ -202,24 +211,7 @@ fun HomeScreen(
                                 )
                             },
                             title = "No Textbooks",
-                            subtitle = "No books available yet",
-                            action = {
-                                if (isSeller) {
-                                    Button(onClick = onAddBook) {
-                                        Text("Add First Book")
-                                    }
-                                } else {
-                                    TextButton(onClick = {
-                                        val intent = Intent(
-                                            Intent.ACTION_VIEW,
-                                            Uri.parse("https://books.google.com/books?q=textbooks")
-                                        )
-                                        context.startActivity(intent)
-                                    }) {
-                                        Text("Browse Google Books")
-                                    }
-                                }
-                            }
+                            subtitle = "No books available yet"
                         )
                     } else {
                         LazyColumn(
@@ -243,10 +235,7 @@ fun HomeScreen(
                     }
                 }
                 is UiState.Error -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Icon(
                                 imageVector = Icons.Default.ErrorOutline,
@@ -254,6 +243,7 @@ fun HomeScreen(
                                 modifier = Modifier.size(64.dp),
                                 tint = MaterialTheme.colorScheme.error
                             )
+                            Spacer(modifier = Modifier.height(8.dp))
                             Text(
                                 text = state.message,
                                 color = MaterialTheme.colorScheme.error

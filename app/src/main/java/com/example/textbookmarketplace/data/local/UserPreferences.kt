@@ -25,10 +25,7 @@ class UserPreferences @Inject constructor(
         val ROLE = stringPreferencesKey("role")
         val IS_LOGGED_IN = booleanPreferencesKey("is_logged_in")
         val THEME_MODE = stringPreferencesKey("theme_mode")
-        val PROFILE_IMAGE = stringPreferencesKey("profile_image")
-        val UNIVERSITY = stringPreferencesKey("university")
-        val PHONE_NUMBER = stringPreferencesKey("phone_number")
-        val FCM_TOKEN = stringPreferencesKey("fcm_token")
+        val FIRST_LAUNCH = booleanPreferencesKey("first_launch")
     }
 
     val currentUser: Flow<AppUser> = context.dataStore.data.map { prefs ->
@@ -37,16 +34,14 @@ class UserPreferences @Inject constructor(
             username = prefs[USERNAME] ?: "",
             email = prefs[EMAIL] ?: "",
             role = UserRole.valueOf(prefs[ROLE] ?: "BUYER"),
-            isLoggedIn = prefs[IS_LOGGED_IN] ?: false,
-            profileImageUrl = prefs[PROFILE_IMAGE] ?: "",
-            university = prefs[UNIVERSITY] ?: "",
-            phoneNumber = prefs[PHONE_NUMBER] ?: ""
+            isLoggedIn = prefs[IS_LOGGED_IN] ?: false
         )
     }
 
     val themeMode: Flow<String> = context.dataStore.data.map { it[THEME_MODE] ?: "SYSTEM" }
 
-    val fcmToken: Flow<String> = context.dataStore.data.map { it[FCM_TOKEN] ?: "" }
+    // Add this:
+    val isFirstLaunch: Flow<Boolean> = context.dataStore.data.map { it[FIRST_LAUNCH] ?: true }
 
     suspend fun saveUser(user: AppUser) {
         context.dataStore.edit { prefs ->
@@ -55,9 +50,6 @@ class UserPreferences @Inject constructor(
             prefs[EMAIL] = user.email
             prefs[ROLE] = user.role.name
             prefs[IS_LOGGED_IN] = user.isLoggedIn
-            prefs[PROFILE_IMAGE] = user.profileImageUrl
-            prefs[UNIVERSITY] = user.university
-            prefs[PHONE_NUMBER] = user.phoneNumber
         }
     }
 
@@ -65,8 +57,9 @@ class UserPreferences @Inject constructor(
         context.dataStore.edit { it[THEME_MODE] = mode }
     }
 
-    suspend fun saveFcmToken(token: String) {
-        context.dataStore.edit { it[FCM_TOKEN] = token }
+    // Add this:
+    suspend fun setFirstLaunchFalse() {
+        context.dataStore.edit { it[FIRST_LAUNCH] = false }
     }
 
     suspend fun clearUser() {

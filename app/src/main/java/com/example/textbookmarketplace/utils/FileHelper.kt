@@ -36,6 +36,7 @@ class FileHelper @Inject constructor(
             val dir = File(context.filesDir, folder).apply { mkdirs() }
             val name = UUID.randomUUID().toString() + ext
             val outFile = File(dir, name)
+
             context.contentResolver.openInputStream(uri)?.use { input ->
                 FileOutputStream(outFile).use { output ->
                     input.copyTo(output)

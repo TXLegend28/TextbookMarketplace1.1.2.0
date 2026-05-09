@@ -22,9 +22,7 @@ class ChatRepository @Inject constructor(
         localDao.insertMessage(message.copy(isSynced = false))
         try {
             val result = remoteRepo.sendMessage(message)
-            if (result.isSuccess) {
-                localDao.markSynced(message.id)
-            }
+            if (result.isSuccess) localDao.markSynced(message.id)
         } catch (_: Exception) {}
     }
 

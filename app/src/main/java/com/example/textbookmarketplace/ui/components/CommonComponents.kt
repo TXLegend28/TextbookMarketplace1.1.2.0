@@ -70,7 +70,6 @@ fun TextbookCard(
             }
 
             Spacer(modifier = Modifier.width(12.dp))
-
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = textbook.title,

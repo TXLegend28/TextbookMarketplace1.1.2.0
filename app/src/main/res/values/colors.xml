@@ -1,4 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="ic_launcher_background">#FFFFFF</color>
+    <color name="colorPrimary">#dcc90d</color>
+    <color name="colorPrimaryVariant">#b3a30a</color>
+    <color name="colorOnPrimary">#000000</color>
+    <color name="colorSecondary">#dcc90d</color>
+    <color name="colorOnSecondary">#000000</color>
+    <color name="colorBackground">#FFFFFF</color>
+    <color name="colorSurface">#FFFFFF</color>
+    <color name="colorError">#B00020</color>
+    <color name="pdf_page_bg">#F5F5F5</color>
 </resources>

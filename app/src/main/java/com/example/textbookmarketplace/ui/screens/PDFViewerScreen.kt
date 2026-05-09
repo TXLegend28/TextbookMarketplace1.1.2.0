@@ -7,8 +7,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -19,6 +17,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import java.io.File
+import java.net.URL
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,32 +32,44 @@ fun PdfViewerScreen(
 
     LaunchedEffect(filePath) {
         try {
-            val file = File(filePath)
-            if (!file.exists()) {
+            var fileToRender: File? = null
+
+            // If it's a remote URL, download it first
+            if (filePath.startsWith("http")) {
+                fileToRender = File(context.cacheDir, "temp_pdf_${System.currentTimeMillis()}.pdf")
+                URL(filePath).openStream().use { input ->
+                    fileToRender.outputStream().use { output -> input.copyTo(output) }
+                }
+            } else {
+                // Local file
+                fileToRender = File(filePath)
+            }
+
+            if (fileToRender != null && fileToRender.exists()) {
+                val fd = ParcelFileDescriptor.open(fileToRender, ParcelFileDescriptor.MODE_READ_ONLY)
+                val renderer = PdfRenderer(fd)
+                val bitmaps = mutableListOf<android.graphics.Bitmap>()
+
+                for (i in 0 until renderer.pageCount) {
+                    val page = renderer.openPage(i)
+                    val bitmap = android.graphics.Bitmap.createBitmap(page.width, page.height, android.graphics.Bitmap.Config.ARGB_8888)
+                    page.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+                    bitmaps.add(bitmap)
+                    page.close()
+                }
+
+                renderer.close()
+                fd.close()
+
+                // Clean up downloaded file
+                if (filePath.startsWith("http")) fileToRender.delete()
+
+                pages = bitmaps
+                isLoading = false
+            } else {
                 error = "File not found"
                 isLoading = false
-                return@LaunchedEffect
             }
-
-            val fd = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
-            val renderer = PdfRenderer(fd)
-            val bitmaps = mutableListOf<android.graphics.Bitmap>()
-
-            for (i in 0 until renderer.pageCount) {
-                val page = renderer.openPage(i)
-                val bitmap = android.graphics.Bitmap.createBitmap(
-                    page.width, page.height, android.graphics.Bitmap.Config.ARGB_8888
-                )
-                page.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
-                bitmaps.add(bitmap)
-                page.close()
-            }
-
-            renderer.close()
-            fd.close()
-
-            pages = bitmaps
-            isLoading = false
         } catch (e: Exception) {
             error = "Failed to load PDF: ${e.message}"
             isLoading = false
@@ -69,97 +80,27 @@ fun PdfViewerScreen(
         topBar = {
             TopAppBar(
                 title = { Text("Read Book") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary
-                )
+                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, contentDescription = "Back") } },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.primary, titleContentColor = MaterialTheme.colorScheme.onPrimary)
             )
         }
     ) { padding ->
         when {
-            isLoading -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(padding),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
-                }
-            }
-            error != null -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(padding),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(
-                            Icons.Default.ErrorOutline,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.size(48.dp)
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(error!!, color = MaterialTheme.colorScheme.error)
-                    }
-                }
-            }
-            pages.isEmpty() -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(padding),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("No pages to display")
-                }
-            }
+            isLoading -> Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+            error != null -> Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) { Text(error!!, color = MaterialTheme.colorScheme.error) }
+            pages.isEmpty() -> Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) { Text("No pages to display") }
             else -> {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(padding)
-                        .background(MaterialTheme.colorScheme.surface),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
+                LazyColumn(modifier = Modifier.fillMaxSize().padding(padding).background(MaterialTheme.colorScheme.surface), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     items(pages) { bitmap ->
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceVariant
-                            )
-                        ) {
-                            Image(
-                                bitmap = bitmap.asImageBitmap(),
-                                contentDescription = "PDF Page",
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .heightIn(min = 400.dp)
-                            )
+                        Card(modifier = Modifier.fillMaxWidth()) {
+                            Image(bitmap = bitmap.asImageBitmap(), contentDescription = "PDF Page", modifier = Modifier.fillMaxWidth().heightIn(min = 400.dp))
                         }
                     }
-
-                    // Bottom spacing
-                    item {
-                        Spacer(modifier = Modifier.height(32.dp))
-                    }
+                    item { Spacer(modifier = Modifier.height(32.dp)) }
                 }
             }
         }
     }
 
-    // Cleanup bitmaps when leaving screen
-    DisposableEffect(Unit) {
-        onDispose {
-            pages.forEach { it.recycle() }
-        }
-    }
+    DisposableEffect(Unit) { onDispose { pages.forEach { it.recycle() } } }
 }

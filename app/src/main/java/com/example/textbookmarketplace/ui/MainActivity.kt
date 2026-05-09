@@ -18,7 +18,6 @@ import com.example.textbookmarketplace.ui.navigation.Screen
 import com.example.textbookmarketplace.ui.theme.TextbookMarketplaceTheme
 import com.example.textbookmarketplace.ui.viewmodel.AuthViewModel
 import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -33,7 +32,6 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val isLoggedIn by authViewModel.isLoggedIn.collectAsState()
-            val isFirstLaunch by authViewModel.isFirstLaunch.collectAsState()
             val themeMode by authViewModel.themeMode.collectAsState()
 
             val isDarkTheme = when (themeMode) {
@@ -42,38 +40,21 @@ class MainActivity : ComponentActivity() {
                 else -> isSystemInDarkTheme()
             }
 
+            var startDestination by remember { mutableStateOf(Screen.Login.route) }
+
+            // Update start destination based on auth state
+            if (isLoggedIn) {
+                startDestination = Screen.Home.route
+            }
+
             TextbookMarketplaceTheme(darkTheme = isDarkTheme) {
                 val navController = rememberNavController()
 
-                // Auto-redirect on auth change
-                LaunchedEffect(isLoggedIn) {
-                    if (!isLoggedIn) {
-                        navController.navigate(Screen.Login.route) {
-                            popUpTo(0) { inclusive = true }
-                        }
-                    }
-                }
-
-                val startDest = when {
-                    isFirstLaunch -> "welcome"
-                    isLoggedIn -> Screen.Home.route
-                    else -> Screen.Login.route
-                }
-
                 NavGraph(
                     navController = navController,
-                    startDestination = startDest,
-                    onLoginSuccess = {
-                        authViewModel.setFirstLaunchFalse()
-                        navController.navigate(Screen.Home.route) {
-                            popUpTo(Screen.Login.route) { inclusive = true }
-                        }
-                    },
-                    onLogout = {
-                        navController.navigate(Screen.Login.route) {
-                            popUpTo(0) { inclusive = true }
-                        }
-                    }
+                    startDestination = startDestination,
+                    onLoginSuccess = { /* handled by navigation */ },
+                    onLogout = { /* handled by navigation */ }
                 )
             }
         }

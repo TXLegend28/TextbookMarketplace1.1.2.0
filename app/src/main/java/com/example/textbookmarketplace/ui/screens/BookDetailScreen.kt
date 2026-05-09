@@ -2,10 +2,6 @@ package com.example.textbookmarketplace.ui.screens
 
 import android.content.Intent
 import android.net.Uri
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.slideInVertically
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -20,12 +16,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.example.textbookmarketplace.domain.model.Textbook
-import com.example.textbookmarketplace.domain.model.UiState
 import com.example.textbookmarketplace.ui.components.ConditionBadge
 import com.example.textbookmarketplace.ui.theme.GoldPrimary
 import com.example.textbookmarketplace.ui.viewmodel.HomeViewModel
@@ -36,17 +30,18 @@ import java.io.File
 fun BookDetailScreen(
     bookId: String,
     onBack: () -> Unit,
-    onContactSeller: (String, String) -> Unit,
-    onReadPdf: (String) -> Unit,
-    onOpenDocx: (String) -> Unit,
     onChat: (String) -> Unit,
     onBuy: () -> Unit,
+    onReadPdf: (String) -> Unit,
+    onOpenDocx: (String) -> Unit,
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
     var textbook by remember { mutableStateOf<Textbook?>(null) }
     var isLoading by remember { mutableStateOf(true) }
+    val currentUser by viewModel.currentUser.collectAsState()
 
+    // Load book details
     LaunchedEffect(bookId) {
         isLoading = true
         textbook = viewModel.getTextbookById(bookId)
@@ -71,21 +66,11 @@ fun BookDetailScreen(
         }
     ) { padding ->
         if (isLoading) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-                contentAlignment = Alignment.Center
-            ) {
+            Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
         } else if (textbook == null) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-                contentAlignment = Alignment.Center
-            ) {
+            Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
                 Text("Book not found", color = MaterialTheme.colorScheme.error)
             }
         } else {
@@ -96,76 +81,37 @@ fun BookDetailScreen(
                     .padding(padding)
                     .verticalScroll(rememberScrollState())
             ) {
-                // Cover Image Header
+                // Cover Image
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(280.dp)
-                        .background(MaterialTheme.colorScheme.primaryContainer)
+                        .clip(RoundedCornerShape(16.dp))
                 ) {
-                    if (book.localImagePath.isNotEmpty()) {
+                    if (book.localImagePath.isNotEmpty() || book.imageUrl.isNotEmpty()) {
                         AsyncImage(
-                            model = File(book.localImagePath),
+                            model = if (book.localImagePath.isNotEmpty()) File(book.localImagePath) else book.imageUrl,
                             contentDescription = book.title,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(280.dp),
+                            modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop
                         )
                     } else {
                         Icon(
                             imageVector = Icons.Default.Book,
                             contentDescription = null,
-                            modifier = Modifier
-                                .size(80.dp)
-                                .align(Alignment.Center),
+                            modifier = Modifier.size(80.dp).align(Alignment.Center),
                             tint = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                    }
-
-                    // Category Badge
-                    Surface(
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(12.dp),
-                        shape = RoundedCornerShape(8.dp),
-                        color = MaterialTheme.colorScheme.primary
-                    ) {
-                        Text(
-                            text = book.category,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                         )
                     }
                 }
 
-                // Content
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
-                ) {
-                    // Title & Author
-                    Text(
-                        text = book.title,
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = "by ${book.author}",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(top = 4.dp)
-                    )
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(text = book.title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                    Text(text = "by ${book.author}", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Price & Condition Row
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
                             text = "R${String.format("%.2f", book.price)}",
                             style = MaterialTheme.typography.headlineMedium,
@@ -174,138 +120,35 @@ fun BookDetailScreen(
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         ConditionBadge(condition = book.condition)
-                        Spacer(modifier = Modifier.weight(1f))
-                        Text(
-                            text = "${book.copies} available",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
                     }
 
                     Spacer(modifier = Modifier.height(20.dp))
-                    HorizontalDivider()
-                    Spacer(modifier = Modifier.height(20.dp))
 
-                    // Book Details Grid
-                    DetailRow(label = "ISBN", value = book.isbn)
-                    DetailRow(label = "Edition", value = book.edition.ifEmpty { "N/A" })
-                    DetailRow(label = "Course", value = book.course.ifEmpty { "General" })
-                    DetailRow(label = "Listed", value = formatDate(book.dateAdded))
+                    DetailRow("ISBN", book.isbn)
+                    DetailRow("Edition", book.edition.ifEmpty { "N/A" })
+                    DetailRow("Course", book.course.ifEmpty { "General" })
+                    DetailRow("Copies Available", "${book.copies}")
 
                     if (book.description.isNotEmpty()) {
-                        Spacer(modifier = Modifier.height(20.dp))
-                        HorizontalDivider()
-                        Spacer(modifier = Modifier.height(20.dp))
-
-                        Text("Description", style = MaterialTheme.typography.titleMedium)
-                        Text(
-                            text = book.description,
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(top = 8.dp)
-                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text("Description", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Medium)
+                        Text(text = book.description, style = MaterialTheme.typography.bodyMedium)
                     }
 
-                    // Digital Content Section
-                    if (book.digitalFileType.isNotEmpty()) {
-                        Spacer(modifier = Modifier.height(20.dp))
-                        HorizontalDivider()
-                        Spacer(modifier = Modifier.height(20.dp))
-
-                        Text("Digital Content", style = MaterialTheme.typography.titleMedium)
-
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 8.dp),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            if (book.digitalFileType == "pdf") {
-                                OutlinedButton(
-                                    onClick = { onReadPdf(book.digitalFilePath) },
-                                    modifier = Modifier.weight(1f)
-                                ) {
-                                    Icon(Icons.Default.MenuBook, contentDescription = null)
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text("Read PDF")
-                                }
-                            }
-                            if (book.digitalFileType == "docx") {
-                                OutlinedButton(
-                                    onClick = { onOpenDocx(book.digitalFilePath) },
-                                    modifier = Modifier.weight(1f)
-                                ) {
-                                    Icon(Icons.Default.Description, contentDescription = null)
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text("Open DOCX")
-                                }
-                            }
-                        }
-                    }
-
-                    // Seller Info
                     Spacer(modifier = Modifier.height(20.dp))
-                    HorizontalDivider()
-                    Spacer(modifier = Modifier.height(20.dp))
+                    Text("Seller Information", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Medium)
 
-                    Text("Seller Information", style = MaterialTheme.typography.titleMedium)
-
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 8.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant
-                        )
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                CircleAvatar(name = book.sellerName)
-                                Column(modifier = Modifier.padding(start = 12.dp)) {
-                                    Text(
-                                        text = book.sellerName,
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Medium
-                                    )
-                                    Text(
-                                        text = book.sellerEmail,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                            }
-
-                            AnimatedVisibility(
-                                visible = book.bankName.isNotEmpty() && book.accountNumber.isNotEmpty(),
-                                enter = fadeIn() + slideInVertically()
-                            ) {
-                                Column(modifier = Modifier.padding(top = 12.dp)) {
-                                    Text(
-                                        "Payment Details",
-                                        style = MaterialTheme.typography.labelMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                    Text(
-                                        "Bank: ${book.bankName}",
-                                        style = MaterialTheme.typography.bodyMedium
-                                    )
-                                    Text(
-                                        "Account: ${book.accountNumber}",
-                                        style = MaterialTheme.typography.bodyMedium
-                                    )
-                                }
-                            }
-                        }
+                    DetailRow("Name", book.sellerName)
+                    DetailRow("Email", book.sellerEmail)
+                    if (book.bankName.isNotEmpty()) {
+                        DetailRow("Bank", book.bankName)
+                        DetailRow("Account", book.accountNumber)
                     }
 
-                    // Action Buttons
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        // Contact Seller - Opens Gmail
+                    // Action Buttons Row
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         OutlinedButton(
                             onClick = {
                                 val intent = Intent(Intent.ACTION_SENDTO).apply {
@@ -322,7 +165,6 @@ fun BookDetailScreen(
                             Text("Contact")
                         }
 
-                        // Chat Button
                         OutlinedButton(
                             onClick = { onChat(book.sellerId) },
                             modifier = Modifier.weight(1f)
@@ -335,22 +177,42 @@ fun BookDetailScreen(
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    // Buy Now Button (Payment Simulation)
-                    Button(
-                        onClick = onBuy,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(56.dp),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = GoldPrimary,
-                            contentColor = MaterialTheme.colorScheme.onPrimary
-                        )
-                    ) {
-                        Icon(Icons.Default.ShoppingCart, contentDescription = null)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Buy Now - R${String.format("%.2f", book.price)}",
-                            style = MaterialTheme.typography.titleMedium)
+                    // Digital Content Buttons
+                    if (book.digitalFileType == "pdf" && book.digitalFilePath.isNotEmpty()) {
+                        Button(
+                            onClick = { onReadPdf(book.digitalFilePath) },
+                            modifier = Modifier.fillMaxWidth().height(56.dp),
+                            shape = RoundedCornerShape(16.dp)
+                        ) {
+                            Icon(Icons.Default.MenuBook, contentDescription = null)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Read PDF")
+                        }
+                    } else if (book.digitalFileType == "docx" && book.digitalFilePath.isNotEmpty()) {
+                        Button(
+                            onClick = { onOpenDocx(book.digitalFilePath) },
+                            modifier = Modifier.fillMaxWidth().height(56.dp),
+                            shape = RoundedCornerShape(16.dp)
+                        ) {
+                            Icon(Icons.Default.Description, contentDescription = null)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Open DOCX")
+                        }
+                    }
+
+                    // Buy Button (ONLY visible if current user is NOT the seller)
+                    if (currentUser.id != book.sellerId) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Button(
+                            onClick = onBuy,
+                            modifier = Modifier.fillMaxWidth().height(56.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = GoldPrimary)
+                        ) {
+                            Icon(Icons.Default.ShoppingCart, contentDescription = null)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Buy Now - R${String.format("%.2f", book.price)}")
+                        }
                     }
 
                     Spacer(modifier = Modifier.height(32.dp))
@@ -379,27 +241,4 @@ private fun DetailRow(label: String, value: String) {
             fontWeight = FontWeight.Medium
         )
     }
-}
-
-@Composable
-private fun CircleAvatar(name: String, modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier
-            .size(48.dp)
-            .clip(RoundedCornerShape(50))
-            .background(MaterialTheme.colorScheme.primaryContainer),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = name.firstOrNull()?.uppercase() ?: "?",
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onPrimaryContainer,
-            fontWeight = FontWeight.Bold
-        )
-    }
-}
-
-private fun formatDate(timestamp: Long): String {
-    val date = java.util.Date(timestamp)
-    return java.text.SimpleDateFormat("MMM dd, yyyy", java.util.Locale.getDefault()).format(date)
 }

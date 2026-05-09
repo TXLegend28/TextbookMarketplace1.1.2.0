@@ -1,0 +1,14 @@
+<resources>
+    <style name="Theme.TextbookMarketplace" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">#dcc90d</item>
+        <item name="colorPrimaryVariant">#aa9a0a</item>
+        <item name="colorOnPrimary">#000000</item>
+        <item name="colorSecondary">#dcc90d</item>
+        <item name="colorOnSecondary">#000000</item>
+        <item name="android:colorBackground">#121212</item>
+        <item name="colorSurface">#1E1E1E</item>
+        <item name="colorError">#CF6679</item>
+        <item name="android:statusBarColor">#000000</item>
+        <item name="android:navigationBarColor">#000000</item>
+    </style>
+</resources>

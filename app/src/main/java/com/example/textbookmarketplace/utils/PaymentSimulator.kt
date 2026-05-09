@@ -9,7 +9,6 @@ import javax.inject.Singleton
 
 @Singleton
 class PaymentSimulator @Inject constructor() {
-
     suspend fun processPayment(
         phoneNumber: String,
         amount: Double,

@@ -13,10 +13,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardCapitalization
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.textbookmarketplace.domain.model.ChatMessage
 import com.example.textbookmarketplace.ui.viewmodel.ChatViewModel
 import kotlinx.coroutines.launch
 
@@ -34,12 +32,9 @@ fun ChatScreen(
     var messageText by remember { mutableStateOf("") }
     val scope = rememberCoroutineScope()
 
-    // Auto-scroll to bottom when new messages arrive
     LaunchedEffect(messages.size) {
         if (messages.isNotEmpty()) {
-            scope.launch {
-                listState.animateScrollToItem(messages.size - 1)
-            }
+            scope.launch { listState.animateScrollToItem(messages.size - 1) }
         }
     }
 
@@ -60,43 +55,28 @@ fun ChatScreen(
         },
         bottomBar = {
             Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp),
+                modifier = Modifier.fillMaxWidth().padding(8.dp),
                 shape = RoundedCornerShape(24.dp)
             ) {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     OutlinedTextField(
                         value = messageText,
                         onValueChange = { messageText = it },
                         placeholder = { Text("Type a message...") },
-                        modifier = Modifier
-                            .weight(1f)
-                            .heightIn(max = 120.dp),
+                        modifier = Modifier.weight(1f).heightIn(max = 120.dp),
                         shape = RoundedCornerShape(20.dp),
-                        keyboardOptions = KeyboardOptions.Default.copy(
-                            capitalization = KeyboardCapitalization.Sentences
-                        ),
+                        keyboardOptions = KeyboardOptions.Default.copy(capitalization = KeyboardCapitalization.Sentences),
                         maxLines = 4,
-                        singleLine = false,
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = MaterialTheme.colorScheme.primary
-                        )
+                        singleLine = false
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     IconButton(
                         onClick = {
                             if (messageText.isNotBlank()) {
-                                viewModel.sendMessage(
-                                    bookId = bookId,
-                                    receiverId = sellerId,
-                                    message = messageText.trim()
-                                )
+                                viewModel.sendMessage(bookId, sellerId, messageText.trim())
                                 messageText = ""
                             }
                         },
@@ -105,9 +85,7 @@ fun ChatScreen(
                         Icon(
                             Icons.Default.Send,
                             contentDescription = "Send",
-                            tint = if (messageText.isNotBlank())
-                                MaterialTheme.colorScheme.primary
-                            else MaterialTheme.colorScheme.onSurfaceVariant
+                            tint = if (messageText.isNotBlank()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -115,46 +93,24 @@ fun ChatScreen(
         }
     ) { padding ->
         if (messages.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-                contentAlignment = Alignment.Center
-            ) {
+            Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(
-                        imageVector = Icons.Default.ChatBubbleOutline,
-                        contentDescription = null,
-                        modifier = Modifier.size(64.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    Icon(Icons.Default.ChatBubbleOutline, contentDescription = null, modifier = Modifier.size(64.dp))
                     Spacer(modifier = Modifier.height(16.dp))
                     Text("Start a conversation")
-                    Text(
-                        "Ask questions about this textbook",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center
-                    )
+                    Text("Ask questions about this textbook", style = MaterialTheme.typography.bodyMedium)
                 }
             }
         } else {
             LazyColumn(
                 state = listState,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                modifier = Modifier.fillMaxSize().padding(padding).padding(horizontal = 16.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
-                contentPadding = PaddingValues(bottom = 80.dp) // Space for input
+                contentPadding = PaddingValues(bottom = 80.dp)
             ) {
                 items(messages, key = { it.id }) { message ->
                     val isCurrentUser = message.senderId == currentUser.id
-                    ChatBubble(
-                        message = message.message,
-                        isCurrentUser = isCurrentUser,
-                        timestamp = message.timestamp
-                    )
+                    ChatBubble(message = message.message, isCurrentUser = isCurrentUser, timestamp = message.timestamp)
                 }
             }
         }
@@ -162,19 +118,13 @@ fun ChatScreen(
 }
 
 @Composable
-private fun ChatBubble(
-    message: String,
-    isCurrentUser: Boolean,
-    timestamp: Long
-) {
+private fun ChatBubble(message: String, isCurrentUser: Boolean, timestamp: Long) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = if (isCurrentUser)
-            Arrangement.End else Arrangement.Start
+        horizontalArrangement = if (isCurrentUser) Arrangement.End else Arrangement.Start
     ) {
         Column(
-            horizontalAlignment = if (isCurrentUser)
-                Alignment.End else Alignment.Start,
+            horizontalAlignment = if (isCurrentUser) Alignment.End else Alignment.Start,
             modifier = Modifier.widthIn(max = 280.dp)
         ) {
             Surface(
@@ -184,17 +134,13 @@ private fun ChatBubble(
                     bottomStart = if (isCurrentUser) 16.dp else 4.dp,
                     bottomEnd = if (isCurrentUser) 4.dp else 16.dp
                 ),
-                color = if (isCurrentUser)
-                    MaterialTheme.colorScheme.primary
-                else MaterialTheme.colorScheme.surfaceVariant,
+                color = if (isCurrentUser) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
                 tonalElevation = 2.dp
             ) {
                 Text(
                     text = message,
                     style = MaterialTheme.typography.bodyLarge,
-                    color = if (isCurrentUser)
-                        MaterialTheme.colorScheme.onPrimary
-                    else MaterialTheme.colorScheme.onSurface,
+                    color = if (isCurrentUser) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.padding(12.dp)
                 )
             }
