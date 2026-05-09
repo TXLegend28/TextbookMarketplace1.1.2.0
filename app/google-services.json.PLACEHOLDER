@@ -1,0 +1,5 @@
+# Place your google-services.json here after creating a Firebase project at:
+# https://console.firebase.google.com
+# 
+# Enable: Authentication, Firestore Database, Storage
+# Download google-services.json and place it in: app/google-services.json

@@ -1,0 +1,68 @@
+<resources>
+    <string name="app_name">TM Marketplace</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Browse</string>
+    <string name="nav_search">Search</string>
+    <string name="nav_sell">Sell</string>
+    <string name="nav_profile">Profile</string>
+
+    <!-- Login -->
+    <string name="login_title">Welcome Back</string>
+    <string name="login_subtitle">Buy, Sell &amp; Read Textbooks</string>
+    <string name="login_role_prompt">I am a...</string>
+    <string name="role_student">Student</string>
+    <string name="role_student_desc">Buy &amp; Read Books</string>
+    <string name="role_seller">Seller</string>
+    <string name="role_seller_desc">List &amp; Manage Books</string>
+    <string name="login_username_hint">Username</string>
+    <string name="login_email_hint">Email</string>
+    <string name="login_button">Get Started</string>
+    <string name="login_no_password">No password needed. Just your name &amp; email.</string>
+
+    <!-- Home -->
+    <string name="home_search_hint">Search books, authors, sellers...</string>
+    <string name="home_empty_title">No Books Yet</string>
+    <string name="home_empty_subtitle">Be the first to list a textbook or check back soon!</string>
+    <string name="home_search_empty">No Results</string>
+    <string name="home_search_empty_subtitle">No books found for \"%s\"</string>
+    <string name="action_google_books">Search on Google Books</string>
+
+    <!-- Add Book -->
+    <string name="add_book_title">List a Textbook</string>
+    <string name="add_book_cover">Choose Cover Image</string>
+    <string name="add_book_document">Attach PDF or DOCX</string>
+    <string name="add_book_document_attached">Document Attached</string>
+    <string name="add_book_field_required">* Required</string>
+
+    <!-- Book Detail -->
+    <string name="detail_read_pdf">Read PDF</string>
+    <string name="detail_open_docx">Open DOCX</string>
+    <string name="detail_contact_seller">Contact Seller</string>
+    <string name="detail_chat">Chat</string>
+    <string name="detail_buy_now">Buy Now</string>
+
+    <!-- Settings -->
+    <string name="settings_appearance">Appearance</string>
+    <string name="settings_theme_light">Light</string>
+    <string name="settings_theme_dark">Dark</string>
+    <string name="settings_theme_system">System Default</string>
+    <string name="settings_account">Account</string>
+    <string name="settings_logout">Logout</string>
+    <string name="settings_about">About</string>
+    <string name="settings_version">App Version</string>
+
+    <!-- Payment -->
+    <string name="payment_title">Complete Purchase</string>
+    <string name="payment_method_mpesa">M-Pesa Payment</string>
+    <string name="payment_phone_hint">Phone Number</string>
+    <string name="payment_phone_example">e.g., +27 82 123 4567</string>
+    <string name="payment_stk_info">You\'ll receive a STK push prompt on this number</string>
+    <string name="payment_success">Payment Successful!</string>
+    <string name="payment_failed">Payment Failed</string>
+
+    <!-- Errors -->
+    <string name="error_network">No internet connection. Showing offline data.</string>
+    <string name="error_generic">Something went wrong. Please try again.</string>
+    <string name="error_validation">Please fill in all required fields</string>
+</resources>

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "237649777713",
+    "project_id": "textbookmarketplace-8ce28",
+    "storage_bucket": "textbookmarketplace-8ce28.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:237649777713:android:554ac4d4222953397eb110",
+        "android_client_info": {
+          "package_name": "com.example.textbookmarketplace"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC9x2ix6G70wT3JVViIuhGru9QacCN4hVQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
