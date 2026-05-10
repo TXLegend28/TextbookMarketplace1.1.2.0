@@ -8,10 +8,12 @@ import com.example.textbookmarketplace.domain.model.AppUser
 import com.example.textbookmarketplace.domain.model.Textbook
 import com.example.textbookmarketplace.domain.model.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class MyListingsViewModel @Inject constructor(
     private val repository: TextbookRepository,

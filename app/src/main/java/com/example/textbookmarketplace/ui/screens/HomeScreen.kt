@@ -5,7 +5,6 @@ import android.net.Uri
 import androidx.compose.animation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -14,12 +13,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.textbookmarketplace.R
 import com.example.textbookmarketplace.domain.model.UiState
-import com.example.textbookmarketplace.ui.components.EmptyState
-import com.example.textbookmarketplace.ui.components.TextbookCard
+import com.example.textbookmarketplace.ui.components.*
 import com.example.textbookmarketplace.ui.viewmodel.HomeViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -28,17 +28,16 @@ fun HomeScreen(
     onBookClick: (String) -> Unit,
     onAddBook: () -> Unit,
     onMyListings: () -> Unit,
+    onWebSearch: () -> Unit,
     onSettings: () -> Unit,
     viewModel: HomeViewModel = hiltViewModel()
 ) {
-    val context = LocalContext.current
     val textbooksState by viewModel.textbooks.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
-    val selectedCategory by viewModel.selectedCategory.collectAsState()
     val isSeller by viewModel.isSeller.collectAsState()
-    var showMenu by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
-    val categories = listOf("All", "Engineering", "Medicine", "Law", "Business", "IT", "Science")
+    var showMenu by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -46,14 +45,14 @@ fun HomeScreen(
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
-                            imageVector = Icons.Default.Book,
-                            contentDescription = null,
+                            painter = painterResource(id = R.drawable.ic_launcher_monochrome),
+                            contentDescription = "Logo",
                             tint = MaterialTheme.colorScheme.onPrimary,
                             modifier = Modifier.size(28.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "TM Marketplace",
+                            "TM Marketplace",
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
@@ -83,12 +82,10 @@ fun HomeScreen(
                             )
                         }
                         DropdownMenuItem(
-                            text = { Text("Web Search (Google Books)") },
+                            text = { Text("Web Search") },
                             onClick = {
                                 showMenu = false
-                                context.startActivity(
-                                    Intent(Intent.ACTION_VIEW, Uri.parse("https://books.google.com/books?q=textbooks"))
-                                )
+                                onWebSearch()
                             },
                             leadingIcon = { Icon(Icons.Default.Public, null) }
                         )
@@ -103,14 +100,41 @@ fun HomeScreen(
         },
         floatingActionButton = {
             if (isSeller) {
-                FloatingActionButton(
-                    onClick = onAddBook,
-                    containerColor = MaterialTheme.colorScheme.primary
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Add Book",
-                        tint = MaterialTheme.colorScheme.onPrimary
+                    FloatingActionButton(
+                        onClick = onMyListings,
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        modifier = Modifier.size(56.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.List,
+                            contentDescription = "My Listings",
+                            tint = MaterialTheme.colorScheme.onSecondaryContainer
+                        )
+                    }
+                    Text(
+                        text = "My Listings",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+
+                    FloatingActionButton(
+                        onClick = onAddBook,
+                        containerColor = MaterialTheme.colorScheme.primary
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Add Book",
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
+                    Text(
+                        text = "Add Book",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
             }
@@ -121,11 +145,10 @@ fun HomeScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            // Search Bar
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = viewModel::setSearchQuery,
-                placeholder = { Text("Search books, authors, ISBN...") },
+                placeholder = { Text("Search books, authors, sellers...") },
                 leadingIcon = { Icon(Icons.Default.Search, null) },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -134,28 +157,12 @@ fun HomeScreen(
                 singleLine = true
             )
 
-            // Category Chips
-            LazyRow(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 4.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(categories) { category ->
-                    FilterChip(
-                        selected = selectedCategory == category,
-                        onClick = { viewModel.setCategory(category) },
-                        label = { Text(category) }
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Content State
             when (val state = textbooksState) {
                 is UiState.Loading -> {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
                         CircularProgressIndicator()
                     }
                 }
@@ -173,16 +180,20 @@ fun HomeScreen(
                         subtitle = "Be the first to list a textbook or check back soon!",
                         action = {
                             TextButton(onClick = {
-                                context.startActivity(
-                                    Intent(Intent.ACTION_VIEW, Uri.parse("https://books.google.com/books?q=textbooks"))
+                                val intent = Intent(
+                                    Intent.ACTION_VIEW,
+                                    Uri.parse("https://books.google.com/books?q=textbooks")
                                 )
-                            }) { Text("Search on Google Books") }
+                                context.startActivity(intent)
+                            }) {
+                                Text("Search on Google Books")
+                            }
                         }
                     )
                 }
                 is UiState.Success -> {
                     val books = state.data
-                    if (books.isEmpty() && searchQuery.isNotBlank()) {
+                    if (books.isEmpty() && searchQuery.isNotEmpty()) {
                         EmptyState(
                             icon = {
                                 Icon(
@@ -195,10 +206,14 @@ fun HomeScreen(
                             subtitle = "No books found for \"$searchQuery\"",
                             action = {
                                 TextButton(onClick = {
-                                    context.startActivity(
-                                        Intent(Intent.ACTION_VIEW, Uri.parse("https://books.google.com/books?q=${Uri.encode(searchQuery)}"))
+                                    val intent = Intent(
+                                        Intent.ACTION_VIEW,
+                                        Uri.parse("https://books.google.com/books?q=${Uri.encode(searchQuery)}")
                                     )
-                                }) { Text("Search on Google Books") }
+                                    context.startActivity(intent)
+                                }) {
+                                    Text("Search on Google Books")
+                                }
                             }
                         )
                     } else if (books.isEmpty()) {
@@ -211,7 +226,24 @@ fun HomeScreen(
                                 )
                             },
                             title = "No Textbooks",
-                            subtitle = "No books available yet"
+                            subtitle = "No books available yet",
+                            action = {
+                                if (isSeller) {
+                                    Button(onClick = onAddBook) {
+                                        Text("Add First Book")
+                                    }
+                                } else {
+                                    TextButton(onClick = {
+                                        val intent = Intent(
+                                            Intent.ACTION_VIEW,
+                                            Uri.parse("https://books.google.com/books?q=textbooks")
+                                        )
+                                        context.startActivity(intent)
+                                    }) {
+                                        Text("Browse Google Books")
+                                    }
+                                }
+                            }
                         )
                     } else {
                         LazyColumn(
@@ -235,7 +267,10 @@ fun HomeScreen(
                     }
                 }
                 is UiState.Error -> {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Icon(
                                 imageVector = Icons.Default.ErrorOutline,
@@ -243,7 +278,6 @@ fun HomeScreen(
                                 modifier = Modifier.size(64.dp),
                                 tint = MaterialTheme.colorScheme.error
                             )
-                            Spacer(modifier = Modifier.height(8.dp))
                             Text(
                                 text = state.message,
                                 color = MaterialTheme.colorScheme.error

@@ -18,6 +18,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import java.io.File
 import java.net.URL
+import java.net.URLDecoder
+import java.nio.charset.StandardCharsets
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -26,23 +28,30 @@ fun PdfViewerScreen(
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
+    val decodedPath = remember(filePath) {
+        try {
+            URLDecoder.decode(filePath, StandardCharsets.UTF_8.toString())
+        } catch (e: Exception) {
+            filePath
+        }
+    }
     var pages by remember { mutableStateOf<List<android.graphics.Bitmap>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     var error by remember { mutableStateOf<String?>(null) }
 
-    LaunchedEffect(filePath) {
+    LaunchedEffect(decodedPath) {
         try {
             var fileToRender: File? = null
 
             // If it's a remote URL, download it first
-            if (filePath.startsWith("http")) {
+            if (decodedPath.startsWith("http")) {
                 fileToRender = File(context.cacheDir, "temp_pdf_${System.currentTimeMillis()}.pdf")
-                URL(filePath).openStream().use { input ->
+                URL(decodedPath).openStream().use { input ->
                     fileToRender.outputStream().use { output -> input.copyTo(output) }
                 }
             } else {
                 // Local file
-                fileToRender = File(filePath)
+                fileToRender = File(decodedPath)
             }
 
             if (fileToRender != null && fileToRender.exists()) {
@@ -62,12 +71,12 @@ fun PdfViewerScreen(
                 fd.close()
 
                 // Clean up downloaded file
-                if (filePath.startsWith("http")) fileToRender.delete()
+                if (decodedPath.startsWith("http")) fileToRender.delete()
 
                 pages = bitmaps
                 isLoading = false
             } else {
-                error = "File not found"
+                error = "File not found: $decodedPath"
                 isLoading = false
             }
         } catch (e: Exception) {

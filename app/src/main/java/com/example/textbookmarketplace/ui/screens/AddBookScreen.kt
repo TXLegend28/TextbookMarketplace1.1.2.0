@@ -46,10 +46,16 @@ fun AddBookScreen(
     var hasDocument by remember { mutableStateOf(false) }
 
     // Seller Info (including email for contact)
+    val currentUser by viewModel.currentUser.collectAsState()
     var sellerName by remember { mutableStateOf("") }
     var sellerEmail by remember { mutableStateOf("") }
     var bankName by remember { mutableStateOf("") }
     var accountNumber by remember { mutableStateOf("") }
+
+    LaunchedEffect(currentUser) {
+        if (sellerName.isBlank()) sellerName = currentUser.username
+        if (sellerEmail.isBlank()) sellerEmail = currentUser.email
+    }
 
     val conditions = listOf("New", "Like New", "Good", "Fair", "Poor")
     val categories = listOf("General", "Engineering", "Medicine", "Law", "Business", "IT", "Science")
@@ -200,7 +206,8 @@ fun AddBookScreen(
                         title = title, author = author, isbn = isbn, edition = edition,
                         copies = copiesInt, price = priceDouble, course = course, condition = condition,
                         description = description, category = category,
-                        sellerName = sellerName, sellerEmail = sellerEmail,
+                        sellerName = sellerName.ifBlank { currentUser.username },
+                        sellerEmail = sellerEmail.ifBlank { currentUser.email },
                         bankName = bankName, accountNumber = accountNumber
                     )
                 },

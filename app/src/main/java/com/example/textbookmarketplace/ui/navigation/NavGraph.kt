@@ -2,12 +2,19 @@ package com.example.textbookmarketplace.ui.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import android.content.Intent
+import android.net.Uri
+import androidx.core.content.FileProvider
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.textbookmarketplace.ui.screens.*
+import java.io.File
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 sealed class Screen(val route: String) {
     object Login : Screen("login")
@@ -25,7 +32,10 @@ sealed class Screen(val route: String) {
         fun createRoute(bookId: String) = "payment/$bookId"
     }
     object PdfViewer : Screen("pdf_viewer/{filePath}") {
-        fun createRoute(filePath: String) = "pdf_viewer/$filePath"
+        fun createRoute(filePath: String): String {
+            val encodedPath = URLEncoder.encode(filePath, StandardCharsets.UTF_8.toString())
+            return "pdf_viewer/$encodedPath"
+        }
     }
 }
 
@@ -54,12 +64,20 @@ fun NavGraph(
         }
 
         composable(Screen.Home.route) {
+            val context = LocalContext.current
             HomeScreen(
                 onBookClick = { bookId ->
                     navController.navigate(Screen.BookDetail.createRoute(bookId))
                 },
                 onAddBook = { navController.navigate(Screen.AddBook.route) },
                 onMyListings = { navController.navigate(Screen.MyListings.route) },
+                onWebSearch = {
+                    val intent = Intent(
+                        Intent.ACTION_VIEW,
+                        Uri.parse("https://books.google.com/books?q=textbooks")
+                    )
+                    context.startActivity(intent)
+                },
                 onSettings = { navController.navigate(Screen.Settings.route) }
             )
         }
@@ -78,6 +96,7 @@ fun NavGraph(
             arguments = listOf(navArgument("bookId") { type = NavType.StringType })
         ) { backStackEntry ->
             val bookId = backStackEntry.arguments?.getString("bookId") ?: ""
+            val context = LocalContext.current
             BookDetailScreen(
                 bookId = bookId,
                 onBack = { navController.popBackStack() },
@@ -85,7 +104,23 @@ fun NavGraph(
                     navController.navigate(Screen.PdfViewer.createRoute(filePath))
                 },
                 onOpenDocx = { filePath ->
-                    // Handled in screen via Intent
+                    try {
+                        val file = File(filePath)
+                        if (file.exists()) {
+                            val uri = FileProvider.getUriForFile(
+                                context,
+                                "${context.packageName}.fileprovider",
+                                file
+                            )
+                            val intent = Intent(Intent.ACTION_VIEW).apply {
+                                setDataAndType(uri, "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            }
+                            context.startActivity(Intent.createChooser(intent, "Open DOCX"))
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
                 },
                 onChat = { sellerId ->
                     navController.navigate(Screen.Chat.createRoute(bookId, sellerId))
