@@ -28,9 +28,24 @@ class AddBookViewModel @Inject constructor(
     private val _addState = MutableStateFlow<UiState<Unit>>(UiState.Empty)
     val addState: StateFlow<UiState<Unit>> = _addState.asStateFlow()
 
+    private val _editingTextbook = MutableStateFlow<Textbook?>(null)
+    val editingTextbook: StateFlow<Textbook?> = _editingTextbook.asStateFlow()
+
     private var localImagePath: String = ""
     private var digitalFilePath: String = ""
     private var digitalFileType: String = ""
+
+    fun loadTextbook(bookId: String) {
+        viewModelScope.launch {
+            val book = repository.getTextbookById(bookId)
+            book?.let {
+                _editingTextbook.value = it
+                localImagePath = it.localImagePath
+                digitalFilePath = it.digitalFilePath
+                digitalFileType = it.digitalFileType
+            }
+        }
+    }
 
     fun setImage(uri: Uri) {
         viewModelScope.launch {
@@ -45,7 +60,8 @@ class AddBookViewModel @Inject constructor(
         }
     }
 
-    fun addTextbook(
+    fun saveTextbook(
+        id: String? = null,
         title: String, author: String, isbn: String, edition: String,
         copies: Int, price: Double, course: String, condition: String,
         description: String, category: String,
@@ -57,7 +73,7 @@ class AddBookViewModel @Inject constructor(
             val user = currentUser.value
 
             val textbook = Textbook(
-                id = UUID.randomUUID().toString(),
+                id = id ?: UUID.randomUUID().toString(),
                 title = title, author = author, isbn = isbn, edition = edition,
                 copies = copies, price = price,
                 sellerName = sellerName, sellerEmail = sellerEmail,
@@ -66,15 +82,20 @@ class AddBookViewModel @Inject constructor(
                 localImagePath = localImagePath,
                 digitalFilePath = digitalFilePath, digitalFileType = digitalFileType,
                 sellerId = user.id, category = category,
-                dateAdded = System.currentTimeMillis()
+                dateAdded = _editingTextbook.value?.dateAdded ?: System.currentTimeMillis()
             )
 
-            _addState.value = repository.addTextbook(textbook)
+            if (id == null) {
+                _addState.value = repository.addTextbook(textbook)
+            } else {
+                _addState.value = repository.updateTextbook(textbook)
+            }
         }
     }
 
     fun resetState() {
         _addState.value = UiState.Empty
+        _editingTextbook.value = null
         localImagePath = ""
         digitalFilePath = ""
         digitalFileType = ""

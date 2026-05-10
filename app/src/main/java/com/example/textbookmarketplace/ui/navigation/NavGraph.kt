@@ -19,7 +19,9 @@ import java.nio.charset.StandardCharsets
 sealed class Screen(val route: String) {
     object Login : Screen("login")
     object Home : Screen("home")
-    object AddBook : Screen("add_book")
+    object AddBook : Screen("add_book/{bookId}") {
+        fun createRoute(bookId: String = "new") = "add_book/$bookId"
+    }
     object BookDetail : Screen("book_detail/{bookId}") {
         fun createRoute(bookId: String) = "book_detail/$bookId"
     }
@@ -69,7 +71,7 @@ fun NavGraph(
                 onBookClick = { bookId ->
                     navController.navigate(Screen.BookDetail.createRoute(bookId))
                 },
-                onAddBook = { navController.navigate(Screen.AddBook.route) },
+                onAddBook = { navController.navigate(Screen.AddBook.createRoute("new")) },
                 onMyListings = { navController.navigate(Screen.MyListings.route) },
                 onWebSearch = {
                     val intent = Intent(
@@ -82,8 +84,16 @@ fun NavGraph(
             )
         }
 
-        composable(Screen.AddBook.route) {
+        composable(
+            route = Screen.AddBook.route,
+            arguments = listOf(navArgument("bookId") {
+                type = NavType.StringType
+                defaultValue = "new"
+            })
+        ) { backStackEntry ->
+            val bookId = backStackEntry.arguments?.getString("bookId") ?: "new"
             AddBookScreen(
+                bookId = if (bookId == "new") null else bookId,
                 onBookAdded = {
                     navController.popBackStack()
                 },
@@ -134,7 +144,7 @@ fun NavGraph(
         composable(Screen.MyListings.route) {
             MyListingsScreen(
                 onEdit = { bookId ->
-                    navController.navigate(Screen.AddBook.route) // Reuse add screen for edit
+                    navController.navigate(Screen.AddBook.createRoute(bookId))
                 },
                 onBookClick = { bookId ->
                     navController.navigate(Screen.BookDetail.createRoute(bookId))

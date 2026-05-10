@@ -22,15 +22,18 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.example.textbookmarketplace.domain.model.UiState
 import com.example.textbookmarketplace.ui.viewmodel.AddBookViewModel
+import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun AddBookScreen(
+    bookId: String? = null,
     onBookAdded: () -> Unit,
     onBack: () -> Unit,
     viewModel: AddBookViewModel = hiltViewModel()
 ) {
     val addState by viewModel.addState.collectAsState()
+    val editingTextbook by viewModel.editingTextbook.collectAsState()
 
     var title by remember { mutableStateOf("") }
     var author by remember { mutableStateOf("") }
@@ -51,6 +54,33 @@ fun AddBookScreen(
     var sellerEmail by remember { mutableStateOf("") }
     var bankName by remember { mutableStateOf("") }
     var accountNumber by remember { mutableStateOf("") }
+
+    LaunchedEffect(bookId) {
+        bookId?.let { viewModel.loadTextbook(it) }
+    }
+
+    LaunchedEffect(editingTextbook) {
+        editingTextbook?.let { book ->
+            title = book.title
+            author = book.author
+            isbn = book.isbn
+            edition = book.edition
+            course = book.course
+            copies = book.copies.toString()
+            price = book.price.toString()
+            description = book.description
+            condition = book.condition
+            category = book.category
+            sellerName = book.sellerName
+            sellerEmail = book.sellerEmail
+            bankName = book.bankName
+            accountNumber = book.accountNumber
+            hasDocument = book.digitalFilePath.isNotEmpty()
+            if (book.localImagePath.isNotEmpty()) {
+                localImageUri = Uri.fromFile(File(book.localImagePath))
+            }
+        }
+    }
 
     LaunchedEffect(currentUser) {
         if (sellerName.isBlank()) sellerName = currentUser.username
@@ -75,7 +105,7 @@ fun AddBookScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("List a Textbook") },
+                title = { Text(if (bookId == null) "List a Textbook" else "Update Textbook") },
                 navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, null) } },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
@@ -202,7 +232,8 @@ fun AddBookScreen(
                 onClick = {
                     val copiesInt = copies.toIntOrNull() ?: 1
                     val priceDouble = price.toDoubleOrNull() ?: 0.0
-                    viewModel.addTextbook(
+                    viewModel.saveTextbook(
+                        id = bookId,
                         title = title, author = author, isbn = isbn, edition = edition,
                         copies = copiesInt, price = priceDouble, course = course, condition = condition,
                         description = description, category = category,
@@ -218,7 +249,7 @@ fun AddBookScreen(
                 if (addState is UiState.Loading) {
                     CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary)
                 } else {
-                    Text("List Textbook", style = MaterialTheme.typography.titleMedium)
+                    Text(if (bookId == null) "List Textbook" else "Update Details", style = MaterialTheme.typography.titleMedium)
                 }
             }
 
