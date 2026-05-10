@@ -41,7 +41,6 @@ fun BookDetailScreen(
     var isLoading by remember { mutableStateOf(true) }
     val currentUser by viewModel.currentUser.collectAsState()
 
-    // Load book details
     LaunchedEffect(bookId) {
         isLoading = true
         textbook = viewModel.getTextbookById(bookId)
@@ -52,11 +51,7 @@ fun BookDetailScreen(
         topBar = {
             TopAppBar(
                 title = { Text("Book Details") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-                    }
-                },
+                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, contentDescription = "Back") } },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     titleContentColor = MaterialTheme.colorScheme.onPrimary,
@@ -82,12 +77,7 @@ fun BookDetailScreen(
                     .verticalScroll(rememberScrollState())
             ) {
                 // Cover Image
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(280.dp)
-                        .clip(RoundedCornerShape(16.dp))
-                ) {
+                Box(modifier = Modifier.fillMaxWidth().height(280.dp).clip(RoundedCornerShape(16.dp))) {
                     if (book.localImagePath.isNotEmpty() || book.imageUrl.isNotEmpty()) {
                         AsyncImage(
                             model = if (book.localImagePath.isNotEmpty()) File(book.localImagePath) else book.imageUrl,
@@ -96,12 +86,7 @@ fun BookDetailScreen(
                             contentScale = ContentScale.Crop
                         )
                     } else {
-                        Icon(
-                            imageVector = Icons.Default.Book,
-                            contentDescription = null,
-                            modifier = Modifier.size(80.dp).align(Alignment.Center),
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
+                        Icon(imageVector = Icons.Default.Book, contentDescription = null, modifier = Modifier.size(80.dp).align(Alignment.Center), tint = MaterialTheme.colorScheme.onPrimaryContainer)
                     }
                 }
 
@@ -112,12 +97,7 @@ fun BookDetailScreen(
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = "R${String.format("%.2f", book.price)}",
-                            style = MaterialTheme.typography.headlineMedium,
-                            color = GoldPrimary,
-                            fontWeight = FontWeight.Bold
-                        )
+                        Text(text = "R${String.format("%.2f", book.price)}", style = MaterialTheme.typography.headlineMedium, color = GoldPrimary, fontWeight = FontWeight.Bold)
                         Spacer(modifier = Modifier.width(12.dp))
                         ConditionBadge(condition = book.condition)
                     }
@@ -136,10 +116,10 @@ fun BookDetailScreen(
                     }
 
                     Spacer(modifier = Modifier.height(20.dp))
-                    Text("Seller Information", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Medium)
+                    Text("Seller Contact & Payment Info", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Medium)
 
                     DetailRow("Name", book.sellerName)
-                    DetailRow("Email", book.sellerEmail)
+                    DetailRow("Email (for contact)", book.sellerEmail)
                     if (book.bankName.isNotEmpty()) {
                         DetailRow("Bank", book.bankName)
                         DetailRow("Account", book.accountNumber)
@@ -147,14 +127,15 @@ fun BookDetailScreen(
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // Action Buttons Row
+                    // Action Buttons
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        // Contact Seller - Pre-composed email with subject
                         OutlinedButton(
                             onClick = {
+                                val subject = Uri.encode("I am interested in one of your books")
+                                val body = Uri.encode("Hello,\n\nI am interested in buying: ${book.title}\nISBN: ${book.isbn}\nPrice: R${book.price}\n\nPlease let me know if it's still available.\n\nThank you!")
                                 val intent = Intent(Intent.ACTION_SENDTO).apply {
-                                    data = Uri.parse("mailto:${book.sellerEmail}")
-                                    putExtra(Intent.EXTRA_SUBJECT, "Interested in buying one of the available books")
-                                    putExtra(Intent.EXTRA_TEXT, "Hi, I'm interested in: ${book.title}\nISBN: ${book.isbn}\nPrice: R${book.price}")
+                                    data = Uri.parse("mailto:${book.sellerEmail}?subject=$subject&body=$body")
                                 }
                                 context.startActivity(Intent.createChooser(intent, "Send email"))
                             },
@@ -179,36 +160,23 @@ fun BookDetailScreen(
 
                     // Digital Content Buttons
                     if (book.digitalFileType == "pdf" && book.digitalFilePath.isNotEmpty()) {
-                        Button(
-                            onClick = { onReadPdf(book.digitalFilePath) },
-                            modifier = Modifier.fillMaxWidth().height(56.dp),
-                            shape = RoundedCornerShape(16.dp)
-                        ) {
+                        Button(onClick = { onReadPdf(book.digitalFilePath) }, modifier = Modifier.fillMaxWidth().height(56.dp), shape = RoundedCornerShape(16.dp)) {
                             Icon(Icons.Default.MenuBook, contentDescription = null)
                             Spacer(modifier = Modifier.width(8.dp))
                             Text("Read PDF")
                         }
                     } else if (book.digitalFileType == "docx" && book.digitalFilePath.isNotEmpty()) {
-                        Button(
-                            onClick = { onOpenDocx(book.digitalFilePath) },
-                            modifier = Modifier.fillMaxWidth().height(56.dp),
-                            shape = RoundedCornerShape(16.dp)
-                        ) {
+                        Button(onClick = { onOpenDocx(book.digitalFilePath) }, modifier = Modifier.fillMaxWidth().height(56.dp), shape = RoundedCornerShape(16.dp)) {
                             Icon(Icons.Default.Description, contentDescription = null)
                             Spacer(modifier = Modifier.width(8.dp))
                             Text("Open DOCX")
                         }
                     }
 
-                    // Buy Button (ONLY visible if current user is NOT the seller)
+                    // Buy Button (only for buyers)
                     if (currentUser.id != book.sellerId) {
                         Spacer(modifier = Modifier.height(12.dp))
-                        Button(
-                            onClick = onBuy,
-                            modifier = Modifier.fillMaxWidth().height(56.dp),
-                            shape = RoundedCornerShape(16.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = GoldPrimary)
-                        ) {
+                        Button(onClick = onBuy, modifier = Modifier.fillMaxWidth().height(56.dp), shape = RoundedCornerShape(16.dp), colors = ButtonDefaults.buttonColors(containerColor = GoldPrimary)) {
                             Icon(Icons.Default.ShoppingCart, contentDescription = null)
                             Spacer(modifier = Modifier.width(8.dp))
                             Text("Buy Now - R${String.format("%.2f", book.price)}")
@@ -224,21 +192,8 @@ fun BookDetailScreen(
 
 @Composable
 private fun DetailRow(label: String, value: String) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Medium
-        )
+    Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+        Text(text = label, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(text = value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
     }
 }

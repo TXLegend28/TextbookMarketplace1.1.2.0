@@ -23,14 +23,25 @@ class MyListingsViewModel @Inject constructor(
 
     val myListings: StateFlow<UiState<List<Textbook>>> = currentUser
         .flatMapLatest { user ->
-            if (user.id.isNotEmpty()) repository.getMyListings(user.id)
-            else flowOf(emptyList())
+            if (user.id.isNotEmpty()) {
+                repository.getMyListings(user.id)
+            } else {
+                flowOf(emptyList())
+            }
         }
         .map { UiState.Success(it) }
-        .catch { UiState.Error(it.message ?: "Error") }
+        .catch { UiState.Error(it.message ?: "Error loading listings") }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), UiState.Loading)
 
     fun deleteListing(textbook: Textbook) {
-        viewModelScope.launch { repository.deleteTextbook(textbook) }
+        viewModelScope.launch {
+            repository.deleteTextbook(textbook)
+        }
+    }
+
+    fun refreshListings() {
+        viewModelScope.launch {
+            repository.refreshFromRemote()
+        }
     }
 }
