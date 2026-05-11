@@ -64,25 +64,25 @@ The app follows a layered MVVM architecture to ensure separation of concerns, te
 ```
 ┌─────────────────────────────────────────────────┐
 │              PRESENTATION LAYER                 │
-│   (Jetpack Compose Screens & Reusable Components)│
+│ (Jetpack Compose Screens & Reusable Components) │
 └───────────────────┬─────────────────────────────┘
                     │ observes StateFlow
 ┌───────────────────▼─────────────────────────────┐
-│              VIEWMODEL LAYER                     │
-│   (AuthVM, HomeVM, AddBookVM - State Management)│
+│              VIEWMODEL LAYER                    │
+│  (AuthVM, HomeVM, AddBookVM - State Management) │
 └───────────────────┬─────────────────────────────┘
                     │ coordinates
 ┌───────────────────▼─────────────────────────────┐
-│              REPOSITORY LAYER                    │
+│              REPOSITORY LAYER                   │
 │   (Single Source of Truth - Business Logic)     │
 └───────────────────┬─────────────────────────────┘
                     │
 ┌───────────────────▼─────────────────────────────┐
-│              DATA LAYER                          │
-│   ┌──────────────┐    ┌──────────────────┐    │
-│   │ Room (Local) │    │ File Storage     │    │
-│   │ (SQLite DB)  │    │ (Images & PDFs)  │    │
-│   └──────────────┘    └──────────────────┘    │
+│              DATA LAYER                         │
+│   ┌──────────────┐    ┌──────────────────┐      │
+│   │ Room (Local) │    │ File Storage     │      │
+│   │ (SQLite DB)  │    │ (Images & PDFs)  │      │
+│   └──────────────┘    └──────────────────┘      │
 └─────────────────────────────────────────────────┘
 ```
 ---
