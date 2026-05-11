@@ -89,7 +89,7 @@ The app follows a layered MVVM architecture to ensure separation of concerns, te
 
 ## 📂 Project Structure
 
-
+```
 app/
 ├── data/
 │   ├── local/              # Room: AppDatabase, DAOs, UserPreferences
@@ -104,7 +104,7 @@ app/
 │   ├── theme/              # Color, Theme, Type
 │   └── viewmodel/          # ViewModels for each screen
 └── utils/                  # FileHelper, NetworkHelper, PaymentSimulator
-
+```
 
 ---
 
