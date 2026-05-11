@@ -7,6 +7,7 @@ CSC313 Assignment 2 - Textbook Marketplace
 2. Gareth Zuma - 223038030
 3. Someleze Ndamase - 202337430
 4. Axolile Ziyatsha - 202359774
+5. Enam Yothando Ntlonti- 202210889
 
 ### Code Organization
 ```
