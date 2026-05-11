@@ -8,6 +8,7 @@ CSC313 Assignment 2 - Textbook Marketplace
 3. Someleze Ndamase - 202337430
 4. Axolile Ziyatsha - 202359774
 5. Enam Yothando Ntlonti- 202210889
+6. Asemahle Mdingi - 223031950
 
 ### Code Organization
 ```
