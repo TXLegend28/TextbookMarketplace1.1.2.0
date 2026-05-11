@@ -2,10 +2,10 @@
 
 CSC313 Assignment 2 - Textbook Marketplace
 
-### Group Name
-Thokozani Nyingizwayo - 224028634
-Gareth Zuma - 223038030
-Someleze Ndamase - 202337430
+### Group Members
+1. Thokozani Nyingizwayo - 224028634
+2. Gareth Zuma - 223038030
+3. Someleze Ndamase - 202337430
 
 ```
 app/
