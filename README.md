@@ -6,7 +6,9 @@ CSC313 Assignment 2 - Textbook Marketplace
 1. Thokozani Nyingizwayo - 224028634
 2. Gareth Zuma - 223038030
 3. Someleze Ndamase - 202337430
+4. Axolile Ziyatsha - 202359774
 
+### Code Organization
 ```
 app/
 ├── data/
