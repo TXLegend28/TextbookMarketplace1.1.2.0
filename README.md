@@ -85,3 +85,52 @@ The app follows a layered MVVM architecture to ensure separation of concerns, te
 │   └──────────────┘    └──────────────────┘    │
 └─────────────────────────────────────────────────┘
 ```
+---
+
+## 📂 Project Structure
+
+
+app/
+├── data/
+│   ├── local/              # Room: AppDatabase, DAOs, UserPreferences
+│   └── repository/         # TextbookRepository, ChatRepository
+├── domain/
+│   └── model/              # Textbook, AppUser, UiState, UserRole
+├── di/                     # Hilt modules (DatabaseModule)
+├── ui/
+│   ├── components/         # Reusable Composables (TextbookCard, etc.)
+│   ├── navigation/         # NavGraph & Screen routes
+│   ├── screens/            # Login, Home, AddBook, Detail, Settings
+│   ├── theme/              # Color, Theme, Type
+│   └── viewmodel/          # ViewModels for each screen
+└── utils/                  # FileHelper, NetworkHelper, PaymentSimulator
+
+
+---
+
+## 📥 Installation & Setup
+
+1. *Prerequisites:* Android Studio Hedgehog or later, JDK 17, Android SDK 36
+2. *Clone:* git clone https://github.com/TXLegend28/TextbookMarketplace1.1.2.0.git
+3. *Sync:* Open project in Android Studio and allow Gradle to sync dependencies
+4. *Build & Run:* ./gradlew build then launch on an emulator or physical device (API 24+)
+5. *No external configuration required.* The app operates entirely on local storage.
+
+---
+
+## 🗺️ Future Enhancements
+
+- *Firebase Sync:* Real-time cross-device data synchronization
+- *In-App Chat:* Direct buyer-seller messaging
+- *Push Notifications:* Alerts for new listings and messages
+- *Payment Simulation:* End-to-end transaction flow demo
+- *User Ratings & Reviews:* Reputation system for marketplace trust
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
+
+*Repository:* https://github.com/TXLegend28/TextbookMarketplace1.1.2.0  
+*Course:* CSC313 - Object-Oriented Programming | Assignment 2
