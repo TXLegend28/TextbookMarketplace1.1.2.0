@@ -1,6 +1,9 @@
 ### Group Work
 
 CSC313 Assignment 2 - Textbook Marketplace
+
+### Group Name
+Thokozani Nyingizwayo 224028634
 ```
 app/
 ├── data/
